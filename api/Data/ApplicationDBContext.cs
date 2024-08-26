@@ -27,6 +27,11 @@ namespace api.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Configure the one-to-many relationship between Building and Apartments
+            modelBuilder.Entity<Building>()
+                .HasMany(b => b.Apartments)
+                .WithOne(a => a.Building)
+                .HasForeignKey(a => a.BuildingId);
             // Define the primary key for ApartmentPhoto explicitly
             modelBuilder.Entity<ApartmentPhoto>()
                 .HasKey(p => p.PhotoId);
