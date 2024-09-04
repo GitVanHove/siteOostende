@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using api.Data;
+using api.Dtos.Apartments;
+using api.Mappers;
 
 
 namespace api.Controllers
 {
-    [Route("api/apartment")]
+    [Route("api/building")]
     [ApiController]
     public class ApartmentController : ControllerBase
     {
@@ -19,21 +21,26 @@ namespace api.Controllers
             _context = context;
         }
 
-        [HttpGet("building/{buildingId}")]
+        [HttpGet("apartments/{buildingId}")]
         public IActionResult GetApartmentsByBuildingId([FromRoute] int buildingId)
         {
+            // First, fetch the apartments from the database.
             var apartments = _context.Apartments
                                      .Where(a => a.BuildingId == buildingId)
                                      .ToList();
 
-            return Ok(apartments);
+            // Then, convert each apartment to a DTO.
+            var apartmentDtos = apartments.Select(a => a.ToApartmentDto()).ToList();
+
+            return Ok(apartmentDtos);
         }
 
-        [HttpGet("{id}")]
+
+        [HttpGet("apartment/{id}")]
         public IActionResult GetApartmentById([FromRoute] int id)
         {
             var apartment = _context.Apartments
-                                    .Include(a => a.Building) // Include related building if needed
+                                    .Include(a => a.Building)   // Include related building if needed
                                     .FirstOrDefault(a => a.ApartmentId == id);
 
             if (apartment == null)
@@ -41,7 +48,7 @@ namespace api.Controllers
                 return NotFound();
             }
 
-            return Ok(apartment);
+            return Ok(apartment.ToApartmentDto());
         }
 
     }
