@@ -10,6 +10,6 @@ namespace api.Dtos.Amenity
         public int AmenityId { get; set; }
         public string AmenityName { get; set; } = string.Empty;
         // Navigation property
-        public ICollection<ApartmentAmenityDto> ApartmentAmenities { get; set; } = new List<ApartmentAmenityDto>();
+        //public ICollection<ApartmentAmenityDto> ApartmentAmenities { get; set; } = new List<ApartmentAmenityDto>();
     }
 }
