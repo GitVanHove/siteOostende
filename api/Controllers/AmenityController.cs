@@ -43,5 +43,7 @@ namespace api.Controllers
             var amenitiesDto = amenities.Select(a => a.toAmenityDto()).ToList();
             return Ok(amenitiesDto);
         }
+
+
     }
 }

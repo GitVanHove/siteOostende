@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
+using api.Dtos.Buildings;
+using api.Mappers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers
@@ -31,12 +33,22 @@ namespace api.Controllers
         {
             var building = _context.Buildings.Find(id);
 
-            if(building == null)
+            if (building == null)
             {
                 return NotFound();
             }
 
             return Ok(building);
+        }
+
+        [HttpPost("")]
+        public IActionResult Create([FromBody] CreateBuildingRequestDto buildingDto)
+        {
+            var buildingModel = buildingDto.ToBuildingFromCreateDto();
+            _context.Buildings.Add(buildingModel);
+            _context.SaveChanges();
+
+            return CreatedAtAction(nameof(GetById), new {id = buildingModel.Id}, buildingModel.ToBuildingDto());
         }
     }
 }
