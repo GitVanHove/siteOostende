@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using api.Dtos.Amenity;
 
 namespace api.Dtos.Apartments
 {
@@ -16,6 +17,8 @@ namespace api.Dtos.Apartments
         public bool IsAvailable { get; set; }
         public DateTime DateCreated { get; set; }
         public int BuildingId { get; set; }      
+        public ICollection<ApartmentAmenityDto> ApartmentAmenities { get; set; } = new List<ApartmentAmenityDto>();
+
 
     }
 }

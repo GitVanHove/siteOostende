@@ -21,7 +21,10 @@ namespace api.Mappers
                 PricePerNight = apartmentModel.PricePerNight,
                 IsAvailable = apartmentModel.IsAvailable,
                 DateCreated = apartmentModel.DateCreated,
-                BuildingId = apartmentModel.BuildingId
+                BuildingId = apartmentModel.BuildingId,
+                ApartmentAmenities = apartmentModel.ApartmentAmenities
+                                  .Select(aa => aa.toApartmentAmenityDto())
+                                  .ToList()
             };
         }
     }

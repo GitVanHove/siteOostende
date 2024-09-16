@@ -40,15 +40,19 @@ namespace api.Controllers
         public IActionResult GetApartmentById([FromRoute] int id)
         {
             var apartment = _context.Apartments
-                                    .Include(a => a.Building)   // Include related building if needed
-                                    .FirstOrDefault(a => a.ApartmentId == id);
+                            .Where(a => a.ApartmentId == id)
+                            .Include(a => a.ApartmentAmenities) 
+                                .ThenInclude(aa => aa.Amenity)   
+                            .FirstOrDefault();
 
             if (apartment == null)
             {
-                return NotFound();
+                return NotFound(); // Return 404 if the apartment isn't found
             }
 
-            return Ok(apartment.ToApartmentDto());
+            var apartmentDto = apartment.ToApartmentDto();
+
+            return Ok(apartmentDto);
         }
 
     }
