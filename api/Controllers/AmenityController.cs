@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
+using api.Dtos.Amenity;
 using api.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,7 @@ namespace api.Controllers
         {
             var amenities = _context.Amenities.ToList();
 
-            var amenitiesDto = amenities.Select(a => a.toAmenityDto()).ToList();
+            var amenitiesDto = amenities.Select(a => a.ToAmenityDto()).ToList();
 
             return Ok(amenitiesDto);
         }
@@ -40,8 +41,18 @@ namespace api.Controllers
                                     .ToList();
 
             // Convert the result to DTOs
-            var amenitiesDto = amenities.Select(a => a.toAmenityDto()).ToList();
+            var amenitiesDto = amenities.Select(a => a.ToAmenityDto()).ToList();
             return Ok(amenitiesDto);
+        }
+
+        [HttpPost("addAmenities")]
+        public IActionResult Create([FromBody] CreateAmenityRequestDto amenityDto)
+        {
+            var amenityModel = amenityDto.ToAmenityToCreateDto();
+            _context.Amenities.Add(amenityModel);
+            _context.SaveChanges();
+
+            return CreatedAtAction(nameof(GetAmenitiesById), new {id = amenityModel.AmenityId}, amenityModel.ToAmenityDto());
         }
 
 

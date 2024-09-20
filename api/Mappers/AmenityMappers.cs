@@ -9,7 +9,7 @@ namespace api.Mappers
 {
   public static class AmenityMappers
   {
-    public static AmenityDto toAmenityDto(this Amenity amenityModel)
+    public static AmenityDto ToAmenityDto(this Amenity amenityModel)
     {
       return new AmenityDto
       {
@@ -23,7 +23,7 @@ namespace api.Mappers
 
     }
 
-    public static ApartmentAmenityDto toApartmentAmenityDto(this ApartmentAmenity apartmentAmenity)
+    public static ApartmentAmenityDto ToApartmentAmenityDto(this ApartmentAmenity apartmentAmenity)
     {
       return new ApartmentAmenityDto
       {
@@ -31,6 +31,14 @@ namespace api.Mappers
         AmenityId = apartmentAmenity.AmenityId,
         Amount = apartmentAmenity.Amount,
         // Map other properties if needed
+      };
+    }
+
+    public static Amenity ToAmenityToCreateDto(this CreateAmenityRequestDto amenityDto)
+    {
+      return new Amenity
+      {
+        AmenityName = amenityDto.AmenityName
       };
     }
   }

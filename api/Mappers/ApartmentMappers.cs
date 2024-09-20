@@ -23,7 +23,7 @@ namespace api.Mappers
                 DateCreated = apartmentModel.DateCreated,
                 BuildingId = apartmentModel.BuildingId,
                 ApartmentAmenities = apartmentModel.ApartmentAmenities
-                                  .Select(aa => aa.toApartmentAmenityDto())
+                                  .Select(aa => aa.ToApartmentAmenityDto())
                                   .ToList()
             };
         }

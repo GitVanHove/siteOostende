@@ -41,14 +41,14 @@ namespace api.Controllers
             return Ok(building);
         }
 
-        [HttpPost("")]
+        [HttpPost("addBuilding")]
         public IActionResult Create([FromBody] CreateBuildingRequestDto buildingDto)
         {
             var buildingModel = buildingDto.ToBuildingFromCreateDto();
             _context.Buildings.Add(buildingModel);
             _context.SaveChanges();
 
-            return CreatedAtAction(nameof(GetById), new {id = buildingModel.Id}, buildingModel.ToBuildingDto());
+            return CreatedAtAction(nameof(GetById), new { id = buildingModel.Id }, buildingModel.ToBuildingDto());
         }
     }
 }
