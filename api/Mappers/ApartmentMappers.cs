@@ -15,7 +15,7 @@ namespace api.Mappers
             {
                 ApartmentId = apartmentModel.ApartmentId,
                 ApartmentNumber = apartmentModel.ApartmentNumber,
-                FloorNumber =  apartmentModel.FloorNumber,
+                FloorNumber = apartmentModel.FloorNumber,
                 Description = apartmentModel.Description,
                 MaxOccupancy = apartmentModel.MaxOccupancy,
                 PricePerNight = apartmentModel.PricePerNight,
@@ -26,6 +26,22 @@ namespace api.Mappers
                                   .Select(aa => aa.ToApartmentAmenityDto())
                                   .ToList()
             };
+        }
+
+        public static Apartment toCreateApartmentDto(this CreateApartmentDto apartmentDto)
+        {
+            return new Apartment
+            {
+                ApartmentNumber = apartmentDto.ApartmentNumber,
+                FloorNumber = apartmentDto.FloorNumber,
+                Description = apartmentDto.Description,
+                MaxOccupancy = apartmentDto.MaxOccupancy,
+                PricePerNight = apartmentDto.PricePerNight,
+                IsAvailable = apartmentDto.IsAvailable,
+                DateCreated = apartmentDto.DateCreated,
+                BuildingId = apartmentDto.BuildingId
+            };
+
         }
     }
 }

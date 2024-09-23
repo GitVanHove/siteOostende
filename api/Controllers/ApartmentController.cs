@@ -55,6 +55,23 @@ namespace api.Controllers
             return Ok(apartmentDto);
         }
 
+        [HttpPost("addApartment")]
+        public IActionResult Create([FromBody] CreateApartmentDto apartmentDto)
+        {
+            var buildingId = _context.Buildings.Find(apartmentDto.BuildingId);
+            if(buildingId == null)
+            {
+                return NotFound("Building id not found");
+            }
+
+            var apartmentModel = apartmentDto.toCreateApartmentDto();
+            _context.Apartments.Add(apartmentModel);
+            _context.SaveChanges();
+
+            return CreatedAtAction(nameof(GetApartmentById), new { apartmentId = apartmentModel.ApartmentId}, apartmentModel.ToApartmentDto());
+
+        }
+
     }
 
 }
