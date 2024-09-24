@@ -50,5 +50,26 @@ namespace api.Controllers
 
             return CreatedAtAction(nameof(GetById), new { id = buildingModel.Id }, buildingModel.ToBuildingDto());
         }
+
+        [HttpPut]
+        [Route("{id}")]
+        public IActionResult Update([FromRoute] int id, [FromBody] UpdateBuildingRequestDto updateDto)
+        {
+            var buildingModel = _context.Buildings.FirstOrDefault(x => x.Id == id);
+
+            if(buildingModel == null)
+            {
+                return NotFound();
+            }
+
+            buildingModel.Address = updateDto.Address;
+            buildingModel.NumberOfFloors = updateDto.NumberOfFloors;
+            buildingModel.DateBuilt = updateDto.DateBuilt;
+            buildingModel.IsHouse = updateDto.IsHouse;
+
+            _context.SaveChanges();
+
+            return Ok(buildingModel.ToBuildingDto());
+        }
     }
 }
