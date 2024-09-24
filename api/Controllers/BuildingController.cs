@@ -59,7 +59,7 @@ namespace api.Controllers
 
             if(buildingModel == null)
             {
-                return NotFound();
+                return NotFound("Building not found.");
             }
 
             buildingModel.Address = updateDto.Address;
@@ -70,6 +70,23 @@ namespace api.Controllers
             _context.SaveChanges();
 
             return Ok(buildingModel.ToBuildingDto());
+        }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public IActionResult Delete([FromRoute] int id)
+        {
+            var buildingModel = _context.Buildings.FirstOrDefault(x => x.Id == id);
+
+            if(buildingModel == null)
+            {
+                return NotFound("Building not found or doesn't exsist.");
+            }
+
+            _context.Buildings.Remove(buildingModel);
+            _context.SaveChanges();
+
+            return NoContent();
         }
     }
 }
