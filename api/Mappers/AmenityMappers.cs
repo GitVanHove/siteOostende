@@ -30,7 +30,11 @@ namespace api.Mappers
         ApartmentId = apartmentAmenity.ApartmentId,
         AmenityId = apartmentAmenity.AmenityId,
         Amount = apartmentAmenity.Amount,
-        // Map other properties if needed
+        Amenity = new AmenityDto
+        {
+          AmenityId = apartmentAmenity.Amenity.AmenityId,
+          AmenityName = apartmentAmenity.Amenity.AmenityName
+        }
       };
     }
 

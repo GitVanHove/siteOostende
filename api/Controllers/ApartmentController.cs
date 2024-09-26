@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using api.Data;
 using api.Dtos.Apartments;
 using api.Mappers;
+using api.Dtos.Buildings;
+using api.Models;
 
 
 namespace api.Controllers
@@ -41,8 +43,8 @@ namespace api.Controllers
         {
             var apartment = _context.Apartments
                             .Where(a => a.ApartmentId == id)
-                            .Include(a => a.ApartmentAmenities) 
-                                .ThenInclude(aa => aa.Amenity)   
+                            .Include(a => a.ApartmentAmenities)
+                                .ThenInclude(aa => aa.Amenity)
                             .FirstOrDefault();
 
             if (apartment == null)
@@ -59,7 +61,7 @@ namespace api.Controllers
         public IActionResult Create([FromBody] CreateApartmentDto apartmentDto)
         {
             var buildingId = _context.Buildings.Find(apartmentDto.BuildingId);
-            if(buildingId == null)
+            if (buildingId == null)
             {
                 return NotFound("Building id not found");
             }
@@ -68,8 +70,86 @@ namespace api.Controllers
             _context.Apartments.Add(apartmentModel);
             _context.SaveChanges();
 
-            return CreatedAtAction(nameof(GetApartmentById), new { apartmentId = apartmentModel.ApartmentId}, apartmentModel.ToApartmentDto());
+            return CreatedAtAction(nameof(GetApartmentById), new { apartmentId = apartmentModel.ApartmentId }, apartmentModel.ToApartmentDto());
 
+        }
+
+
+        [HttpPut]
+        [Route("apartment/{id}")]
+        public IActionResult Update([FromRoute] int id, [FromBody] UpdateApartmentRequestDto updateDto)
+        {
+            var apartment = _context.Apartments
+                            .Include(a => a.ApartmentAmenities)
+                            .ThenInclude(aa => aa.Amenity) // Ensure the related Amenity is included
+                            .FirstOrDefault(a => a.ApartmentId == id);
+
+            if (apartment == null)
+            {
+                return NotFound($"Apartment with ID {id} not found.");
+            }
+
+            // Update apartment properties
+            apartment.ApartmentNumber = updateDto.ApartmentNumber;
+            apartment.FloorNumber = updateDto.FloorNumber;
+            apartment.Description = updateDto.Description;
+            apartment.MaxOccupancy = updateDto.MaxOccupancy;
+            apartment.PricePerNight = updateDto.PricePerNight;
+            apartment.IsAvailable = updateDto.IsAvailable;
+
+            // Handle amenities
+            foreach (var amenityDto in updateDto.ApartmentAmenities)
+            {
+                // Check if the amenity already exists
+                var existingAmenity = apartment.ApartmentAmenities
+                                              .FirstOrDefault(a => a.AmenityId == amenityDto.AmenityId);
+
+                if (existingAmenity != null)
+                {
+                    // Update the existing amenity's amount
+                    existingAmenity.Amount = amenityDto.Amount;
+                }
+                else
+                {
+                    // Fetch the Amenity from the database (to avoid issues with empty names)
+                    var amenityFromDb = _context.Amenities.FirstOrDefault(a => a.AmenityId == amenityDto.AmenityId);
+                    if (amenityFromDb == null)
+                    {
+                        return BadRequest($"Amenity with ID {amenityDto.AmenityId} not found.");
+                    }
+
+                    // Add the new apartmentamenity
+                    apartment.ApartmentAmenities.Add(new ApartmentAmenity
+                    {
+                        AmenityId = amenityFromDb.AmenityId,
+                        Amount = amenityDto.Amount,
+                        Amenity = amenityFromDb
+                    });
+                }
+            }
+
+            // Remove any apartmentamenities that are not in the updateDto
+            var amenitiesToRemove = apartment.ApartmentAmenities
+                                              .Where(a => !updateDto.ApartmentAmenities
+                                              .Any(ua => ua.AmenityId == a.AmenityId))
+                                              .ToList();
+
+            foreach (var amenity in amenitiesToRemove)
+            {
+                apartment.ApartmentAmenities.Remove(amenity);
+            }
+
+            // Save changes
+            _context.SaveChanges();
+
+            return Ok(apartment.ToApartmentDto());
+        }
+
+        [HttpDelete]
+        [Route("apartment/{id}")]
+        public IActionResult Delete([FromBody] int id)
+        {
+            return Ok();
         }
 
     }
