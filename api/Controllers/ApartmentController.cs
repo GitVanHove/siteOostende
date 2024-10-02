@@ -148,8 +148,8 @@ namespace api.Controllers
         }
 
         [HttpDelete]
-        [Route("apartment/{id}")]
-        public IActionResult Delete([FromBody] int id)
+        [Route("deleteApartment/{id}")]
+        public IActionResult Delete([FromRoute] int id)
         {
 
             using (var transaction = _context.Database.BeginTransaction())

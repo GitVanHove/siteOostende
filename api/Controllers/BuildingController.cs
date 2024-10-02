@@ -52,7 +52,7 @@ namespace api.Controllers
         }
 
         [HttpPut]
-        [Route("{id}")]
+        [Route("deleteBuilding/{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] UpdateBuildingRequestDto updateDto)
         {
             var buildingModel = _context.Buildings.FirstOrDefault(x => x.Id == id);
