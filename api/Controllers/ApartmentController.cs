@@ -60,18 +60,23 @@ namespace api.Controllers
         [HttpPost("addApartment")]
         public IActionResult Create([FromBody] CreateApartmentDto apartmentDto)
         {
-            var buildingId = _context.Buildings.Find(apartmentDto.BuildingId);
-            if (buildingId == null)
+        
+            var building = _context.Buildings.Find(apartmentDto.BuildingId);
+            if (building == null)
             {
                 return NotFound("Building id not found");
             }
 
             var apartmentModel = apartmentDto.toCreateApartmentDto();
+
+            apartmentModel.BuildingId = building.Id; 
+            apartmentModel.Building = building; 
+
             _context.Apartments.Add(apartmentModel);
+
             _context.SaveChanges();
 
-            return CreatedAtAction(nameof(GetApartmentById), new { apartmentId = apartmentModel.ApartmentId }, apartmentModel.ToApartmentDto());
-
+            return CreatedAtAction(nameof(GetApartmentById), new { id = apartmentModel.ApartmentId }, apartmentModel.ToApartmentDto());
         }
 
 
@@ -89,7 +94,6 @@ namespace api.Controllers
                 return NotFound($"Apartment with ID {id} not found.");
             }
 
-            // Update apartment properties
             apartment.ApartmentNumber = updateDto.ApartmentNumber;
             apartment.FloorNumber = updateDto.FloorNumber;
             apartment.Description = updateDto.Description;
@@ -97,7 +101,6 @@ namespace api.Controllers
             apartment.PricePerNight = updateDto.PricePerNight;
             apartment.IsAvailable = updateDto.IsAvailable;
 
-            // Handle amenities
             foreach (var amenityDto in updateDto.ApartmentAmenities)
             {
                 // Check if the amenity already exists
@@ -139,7 +142,6 @@ namespace api.Controllers
                 apartment.ApartmentAmenities.Remove(amenity);
             }
 
-            // Save changes
             _context.SaveChanges();
 
             return Ok(apartment.ToApartmentDto());
@@ -149,7 +151,38 @@ namespace api.Controllers
         [Route("apartment/{id}")]
         public IActionResult Delete([FromBody] int id)
         {
-            return Ok();
+
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var apartment = _context.Apartments
+                                            .Include(a => a.ApartmentAmenities)
+                                            .FirstOrDefault(a => a.ApartmentId == id);
+
+                    if (apartment == null)
+                    {
+                        return NotFound($"Apartment with ID {id} not found.");
+                    }
+
+                    _context.ApartmentAmenities.RemoveRange(apartment.ApartmentAmenities);
+
+                    _context.Apartments.Remove(apartment);
+
+                    _context.SaveChanges();
+
+                    // Commit the transaction if all operations succeed
+                    transaction.Commit();
+
+                    return Ok($"Apartment with ID {id} and its associated amenities have been deleted.");
+                }
+                catch (Exception ex)
+                {
+                    // Rollback the transaction if any operation fails
+                    transaction.Rollback();
+                    return StatusCode(500, $"An error occurred while deleting the apartment: {ex.Message}");
+                }
+            }
         }
 
     }
