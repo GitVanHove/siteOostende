@@ -22,9 +22,9 @@ namespace api.Controllers
         }
 
         [HttpGet("amenities")]
-        public IActionResult GetAmenities()
+        public async Task<IActionResult> GetAmenities()
         {
-            var amenities = _context.Amenities.ToList();
+            var amenities = await _context.Amenities.ToListAsync();
 
             var amenitiesDto = amenities.Select(a => a.ToAmenityDto()).ToList();
 
@@ -32,13 +32,13 @@ namespace api.Controllers
         }
 
         [HttpGet("amenities/{amenityId}")]
-        public IActionResult GetAmenitiesById([FromRoute] int amenityId)
+        public async Task<IActionResult> GetAmenitiesById([FromRoute] int amenityId)
         {
             // Correct the query: Use 'Where' to filter, not 'Include'
-            var amenities = _context.Amenities
+            var amenities = await _context.Amenities
                                     .Where(a => a.AmenityId == amenityId)
                                     //.Include(a => a.ApartmentAmenities) // Use Include only for related data loading
-                                    .ToList();
+                                    .ToListAsync();
 
             // Convert the result to DTOs
             var amenitiesDto = amenities.Select(a => a.ToAmenityDto()).ToList();
@@ -46,11 +46,11 @@ namespace api.Controllers
         }
 
         [HttpPost("addAmenities")]
-        public IActionResult Create([FromBody] CreateAmenityRequestDto amenityDto)
+        public async Task<IActionResult> Create([FromBody] CreateAmenityRequestDto amenityDto)
         {
             var amenityModel = amenityDto.ToAmenityToCreateDto();
-            _context.Amenities.Add(amenityModel);
-            _context.SaveChanges();
+            await _context.Amenities.AddAsync(amenityModel);
+            await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetAmenitiesById), new {id = amenityModel.AmenityId}, amenityModel.ToAmenityDto());
         }

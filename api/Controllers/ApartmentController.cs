@@ -24,12 +24,12 @@ namespace api.Controllers
         }
 
         [HttpGet("apartments/{buildingId}")]
-        public IActionResult GetApartmentsByBuildingId([FromRoute] int buildingId)
+        public async Task<IActionResult> GetApartmentsByBuildingId([FromRoute] int buildingId)
         {
             // First, fetch the apartments from the database.
-            var apartments = _context.Apartments
+            var apartments = await _context.Apartments
                                      .Where(a => a.BuildingId == buildingId)
-                                     .ToList();
+                                     .ToListAsync();
 
             // Then, convert each apartment to a DTO.
             var apartmentDtos = apartments.Select(a => a.ToApartmentDto()).ToList();
@@ -39,13 +39,13 @@ namespace api.Controllers
 
 
         [HttpGet("apartment/{id}")]
-        public IActionResult GetApartmentById([FromRoute] int id)
+        public async Task<IActionResult> GetApartmentById([FromRoute] int id)
         {
-            var apartment = _context.Apartments
+            var apartment = await _context.Apartments
                             .Where(a => a.ApartmentId == id)
                             .Include(a => a.ApartmentAmenities)
                                 .ThenInclude(aa => aa.Amenity)
-                            .FirstOrDefault();
+                            .FirstOrDefaultAsync();
 
             if (apartment == null)
             {
@@ -58,10 +58,10 @@ namespace api.Controllers
         }
 
         [HttpPost("addApartment")]
-        public IActionResult Create([FromBody] CreateApartmentDto apartmentDto)
+        public async Task<IActionResult> Create([FromBody] CreateApartmentDto apartmentDto)
         {
         
-            var building = _context.Buildings.Find(apartmentDto.BuildingId);
+            var building = await _context.Buildings.FindAsync(apartmentDto.BuildingId);
             if (building == null)
             {
                 return NotFound("Building id not found");
@@ -72,9 +72,9 @@ namespace api.Controllers
             apartmentModel.BuildingId = building.Id; 
             apartmentModel.Building = building; 
 
-            _context.Apartments.Add(apartmentModel);
+            await _context.Apartments.AddAsync(apartmentModel);
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetApartmentById), new { id = apartmentModel.ApartmentId }, apartmentModel.ToApartmentDto());
         }
@@ -82,12 +82,12 @@ namespace api.Controllers
 
         [HttpPut]
         [Route("apartment/{id}")]
-        public IActionResult Update([FromRoute] int id, [FromBody] UpdateApartmentRequestDto updateDto)
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateApartmentRequestDto updateDto)
         {
-            var apartment = _context.Apartments
+            var apartment = await _context.Apartments
                             .Include(a => a.ApartmentAmenities)
                             .ThenInclude(aa => aa.Amenity) // Ensure the related Amenity is included
-                            .FirstOrDefault(a => a.ApartmentId == id);
+                            .FirstOrDefaultAsync(a => a.ApartmentId == id);
 
             if (apartment == null)
             {
@@ -104,7 +104,7 @@ namespace api.Controllers
             foreach (var amenityDto in updateDto.ApartmentAmenities)
             {
                 // Check if the amenity already exists
-                var existingAmenity = apartment.ApartmentAmenities
+                var existingAmenity =  apartment.ApartmentAmenities
                                               .FirstOrDefault(a => a.AmenityId == amenityDto.AmenityId);
 
                 if (existingAmenity != null)
@@ -142,23 +142,23 @@ namespace api.Controllers
                 apartment.ApartmentAmenities.Remove(amenity);
             }
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok(apartment.ToApartmentDto());
         }
 
         [HttpDelete]
         [Route("deleteApartment/{id}")]
-        public IActionResult Delete([FromRoute] int id)
+        public async Task<IActionResult> Delete([FromRoute] int id)
         {
 
-            using (var transaction = _context.Database.BeginTransaction())
+            using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    var apartment = _context.Apartments
+                    var apartment =  await _context.Apartments
                                             .Include(a => a.ApartmentAmenities)
-                                            .FirstOrDefault(a => a.ApartmentId == id);
+                                            .FirstOrDefaultAsync(a => a.ApartmentId == id);
 
                     if (apartment == null)
                     {
@@ -169,17 +169,17 @@ namespace api.Controllers
 
                     _context.Apartments.Remove(apartment);
 
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     // Commit the transaction if all operations succeed
-                    transaction.Commit();
+                    await transaction.CommitAsync();
 
                     return Ok($"Apartment with ID {id} and its associated amenities have been deleted.");
                 }
                 catch (Exception ex)
                 {
                     // Rollback the transaction if any operation fails
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                     return StatusCode(500, $"An error occurred while deleting the apartment: {ex.Message}");
                 }
             }

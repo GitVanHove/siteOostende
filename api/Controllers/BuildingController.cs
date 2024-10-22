@@ -6,6 +6,7 @@ using api.Data;
 using api.Dtos.Buildings;
 using api.Mappers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Controllers
 {
@@ -21,41 +22,41 @@ namespace api.Controllers
 
         [HttpGet]
 
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var buildings = _context.Buildings.ToList();
+            var buildings = await _context.Buildings.ToListAsync();
 
             return Ok(buildings);
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetById([FromRoute] int id)
+        public async Task<IActionResult> GetById([FromRoute] int id)
         {
-            var building = _context.Buildings.Find(id);
+            var building = await _context.Buildings.FindAsync(id);
 
             if (building == null)
             {
-                return NotFound();
+                return NotFound("Building was not found");
             }
 
             return Ok(building);
         }
 
         [HttpPost("addBuilding")]
-        public IActionResult Create([FromBody] CreateBuildingRequestDto buildingDto)
+        public async Task<IActionResult> Create([FromBody] CreateBuildingRequestDto buildingDto)
         {
             var buildingModel = buildingDto.ToBuildingFromCreateDto();
-            _context.Buildings.Add(buildingModel);
-            _context.SaveChanges();
+            await _context.Buildings.AddAsync(buildingModel);
+            await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetById), new { id = buildingModel.Id }, buildingModel.ToBuildingDto());
         }
 
         [HttpPut]
         [Route("deleteBuilding/{id}")]
-        public IActionResult Update([FromRoute] int id, [FromBody] UpdateBuildingRequestDto updateDto)
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateBuildingRequestDto updateDto)
         {
-            var buildingModel = _context.Buildings.FirstOrDefault(x => x.Id == id);
+            var buildingModel = await _context.Buildings.FirstOrDefaultAsync(x => x.Id == id);
 
             if(buildingModel == null)
             {
@@ -67,16 +68,16 @@ namespace api.Controllers
             buildingModel.DateBuilt = updateDto.DateBuilt;
             buildingModel.IsHouse = updateDto.IsHouse;
 
-            _context.SaveChanges();
+           await _context.SaveChangesAsync();
 
             return Ok(buildingModel.ToBuildingDto());
         }
 
         [HttpDelete]
         [Route("{id}")]
-        public IActionResult Delete([FromRoute] int id)
+        public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var buildingModel = _context.Buildings.FirstOrDefault(x => x.Id == id);
+            var buildingModel = await _context.Buildings.FirstOrDefaultAsync(x => x.Id == id);
 
             if(buildingModel == null)
             {
@@ -84,7 +85,7 @@ namespace api.Controllers
             }
 
             _context.Buildings.Remove(buildingModel);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
