@@ -9,6 +9,7 @@ using api.Dtos.Apartments;
 using api.Mappers;
 using api.Dtos.Buildings;
 using api.Models;
+using api.Interfaces;
 
 
 namespace api.Controllers
@@ -18,8 +19,10 @@ namespace api.Controllers
     public class ApartmentController : ControllerBase
     {
         private readonly ApplicationDBContext _context;
-        public ApartmentController(ApplicationDBContext context)
+        private readonly IApartmentRepository _apartmentRepo;
+        public ApartmentController(ApplicationDBContext context, IApartmentRepository repo)
         {
+            _apartmentRepo = repo;
             _context = context;
         }
 
@@ -27,9 +30,7 @@ namespace api.Controllers
         public async Task<IActionResult> GetApartmentsByBuildingId([FromRoute] int buildingId)
         {
             // First, fetch the apartments from the database.
-            var apartments = await _context.Apartments
-                                     .Where(a => a.BuildingId == buildingId)
-                                     .ToListAsync();
+            var apartments =  await _apartmentRepo.GetApartmentByBuildingIdAsync(buildingId);
 
             // Then, convert each apartment to a DTO.
             var apartmentDtos = apartments.Select(a => a.ToApartmentDto()).ToList();
@@ -60,7 +61,7 @@ namespace api.Controllers
         [HttpPost("addApartment")]
         public async Task<IActionResult> Create([FromBody] CreateApartmentDto apartmentDto)
         {
-        
+
             var building = await _context.Buildings.FindAsync(apartmentDto.BuildingId);
             if (building == null)
             {
@@ -69,8 +70,8 @@ namespace api.Controllers
 
             var apartmentModel = apartmentDto.toCreateApartmentDto();
 
-            apartmentModel.BuildingId = building.Id; 
-            apartmentModel.Building = building; 
+            apartmentModel.BuildingId = building.Id;
+            apartmentModel.Building = building;
 
             await _context.Apartments.AddAsync(apartmentModel);
 
@@ -104,7 +105,7 @@ namespace api.Controllers
             foreach (var amenityDto in updateDto.ApartmentAmenities)
             {
                 // Check if the amenity already exists
-                var existingAmenity =  apartment.ApartmentAmenities
+                var existingAmenity = apartment.ApartmentAmenities
                                               .FirstOrDefault(a => a.AmenityId == amenityDto.AmenityId);
 
                 if (existingAmenity != null)
@@ -115,7 +116,7 @@ namespace api.Controllers
                 else
                 {
                     // Fetch the Amenity from the database (to avoid issues with empty names)
-                    var amenityFromDb = _context.Amenities.FirstOrDefault(a => a.AmenityId == amenityDto.AmenityId);
+                    var amenityFromDb = await _context.Amenities.FirstOrDefaultAsync(a => a.AmenityId == amenityDto.AmenityId);
                     if (amenityFromDb == null)
                     {
                         return BadRequest($"Amenity with ID {amenityDto.AmenityId} not found.");
@@ -156,7 +157,7 @@ namespace api.Controllers
             {
                 try
                 {
-                    var apartment =  await _context.Apartments
+                    var apartment = await _context.Apartments
                                             .Include(a => a.ApartmentAmenities)
                                             .FirstOrDefaultAsync(a => a.ApartmentId == id);
 
